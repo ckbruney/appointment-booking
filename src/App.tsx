@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useState } from 'react';
 import NavBar from './components/NavBar';
 
 import Box from '@mui/material/Box';
@@ -9,7 +9,14 @@ import StepContent from '@mui/material/StepContent';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
-import { Checkbox, Container, FormControlLabel } from '@mui/material';
+import {
+  Checkbox,
+  Container,
+  FormControl,
+  FormControlLabel,
+  FormGroup,
+  FormLabel,
+} from '@mui/material';
 import { Field, Form, Formik } from 'formik';
 
 interface Step {
@@ -20,51 +27,121 @@ interface Step {
 interface Service {
   name: string;
   price: number;
+  durationInMinutes: number;
 }
 
-const services: Service[] = [
+const serviceList: Service[] = [
   {
     name: 'Adult Cut',
     price: 18,
+    durationInMinutes: 30,
   },
   {
     name: 'Kids Cut',
     price: 10,
+    durationInMinutes: 20,
   },
   {
     name: 'Shape Up',
     price: 5,
+    durationInMinutes: 5,
   },
 ];
 
-const initialValues: Service[] = [];
+interface ServicesFormValues {
+  services: Service[];
+  error?: string;
+}
 
-const Services: FC = (onSubmit) => (
-  <Formik initialValues={initialValues} onSubmit={() => {}}>
-    {({ values }) => (
-      <Form>
-        {services.map((service) => {
+const initialValues: ServicesFormValues = {
+  services: [],
+};
+
+interface ServicesProps {
+  services: Service[];
+  updateServices: (services: Service[]) => void;
+}
+
+const Services: FC<ServicesProps> = ({ services, updateServices }) => {
+  const [error, setError] = useState<string | null>(null);
+  // const [services, setServices] = useState<Service[]>([]);
+
+  const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    const serviceObj = serviceList.find((service) => service.name === value);
+    const index = services.map((service) => service.name).indexOf(value);
+
+    if (index === -1 && serviceObj !== undefined) {
+      // setServices([...services, serviceObj!]);
+      updateServices([...services, serviceObj!]);
+    } else {
+      updateServices(services.filter((_, i) => i !== index));
+      // setServices(services.filter((_, i) => i !== index));
+    }
+  };
+  return (
+    <FormControl>
+      <FormLabel>Services</FormLabel>
+      <FormGroup>
+        {serviceList.map((service) => {
           return (
             <FormControlLabel
               key={service.name}
+              label={`${service.name} - $${service.price}`}
               control={
-                <Field
-                  key={service.name}
-                  type='checkbox'
-                  name='services'
+                <Checkbox
                   value={service.name}
-                  as={Checkbox}
+                  checked={services.includes(service)}
+                  onChange={handleCheckboxChange}
                 />
               }
-              label={service.name}
-            />
+            ></FormControlLabel>
           );
         })}
-        <pre>{JSON.stringify(values, null, 2)}</pre>
-      </Form>
-    )}
-  </Formik>
-);
+      </FormGroup>
+    </FormControl>
+    // <Formik
+    //   initialValues={initialValues}
+    //   onSubmit={({ services }) => {
+    //     if (services.length === 0) {
+    //       setError('Please select at least one service');
+    //       setTimeout(() => {
+    //         setError(null);
+    //       }, 3000);
+    //       return;
+    //     }
+
+    //     console.log({ services });
+    //   }}
+    // >
+    //   {({ values }) => (
+    //     <Form>
+    //       <FormControl sx={{ m: 3 }} component='fieldset' variant='standard'>
+    //         {services.map((service) => {
+    //           return (
+    //             <FormControlLabel
+    //               key={service.name}
+    //               control={
+    //                 <Field
+    //                   key={service.name}
+    //                   type='checkbox'
+    //                   name='services'
+    //                   value={service.name}
+    //                   as={Checkbox}
+    //                 />
+    //               }
+    //               label={`${service.name} - $${service.price}`}
+    //             />
+    //           );
+    //         })}
+    //       </FormControl>
+    //       {error && <Typography color='red'>{error}</Typography>}
+    //       <pre>{JSON.stringify(values, null, 2)}</pre>
+    //     </Form>
+    //   )}
+    // </Formik>
+  );
+};
 
 const steps: Step[] = [
   { label: 'Select your services' },
@@ -74,8 +151,14 @@ const steps: Step[] = [
 
 const App: FC = () => {
   const [activeStep, setActiveStep] = React.useState(0);
+  const [services, setServices] = useState<Service[]>([]);
+
+  const updateServices = (updatedServices: Service[]) => {
+    setServices(updatedServices);
+  };
 
   const handleNext = () => {
+    if (services.length === 0) return;
     setActiveStep((prevActiveStep) => prevActiveStep + 1);
   };
 
@@ -96,7 +179,14 @@ const App: FC = () => {
               return (
                 <Step key={index}>
                   <StepLabel>{label}</StepLabel>
-                  <StepContent>{index === 0 && <Services />}</StepContent>
+                  <StepContent>
+                    {index === 0 && (
+                      <Services
+                        services={services}
+                        updateServices={updateServices}
+                      />
+                    )}
+                  </StepContent>
                 </Step>
               );
             })}
@@ -130,6 +220,7 @@ const App: FC = () => {
             </React.Fragment>
           )}
         </Box>
+        <pre>{JSON.stringify(services, null, 2)}</pre>
       </Container>
     </>
   );
