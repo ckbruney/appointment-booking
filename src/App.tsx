@@ -13,27 +13,31 @@ import {
 import Service from './models/Service';
 import NavBar from './components/NavBar';
 import Services from './components/Services';
-
-interface Step {
-  label: string;
-}
+import SelectAppointment from './components/SelectAppointment';
+import { setDate } from 'date-fns/esm';
 
 const steps: string[] = [
   'Select your services',
-  'Create an ad group',
+  'Select Available Appointment',
   'Create an ad',
 ];
 
 const App: FC = () => {
   const [activeStep, setActiveStep] = React.useState(0);
-  const [services, setServices] = useState<Service[]>([]);
 
+  const [services, setServices] = useState<Service[]>([]);
   const updateServices = (updatedServices: Service[]) => {
     setServices(updatedServices);
   };
 
+  const [appointment, setAppointment] = useState<Date | null>(null);
+  const updateAppointment = (appointmentDateTime: Date) => {
+    setAppointment(appointmentDateTime);
+  };
+
   const handleNext = () => {
     if (services.length === 0) return;
+    if (activeStep === 1 && appointment === null) return;
     setActiveStep((prevActiveStep) => prevActiveStep + 1);
   };
 
@@ -59,6 +63,12 @@ const App: FC = () => {
                       <Services
                         services={services}
                         updateServices={updateServices}
+                      />
+                    )}
+                    {index === 1 && (
+                      <SelectAppointment
+                        appointment={appointment}
+                        updateAppointment={updateAppointment}
                       />
                     )}
                   </StepContent>
