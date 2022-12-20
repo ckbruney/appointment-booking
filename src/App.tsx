@@ -14,7 +14,6 @@ import Service from './models/Service';
 import NavBar from './components/NavBar';
 import Services from './components/Services';
 import SelectAppointment from './components/SelectAppointment';
-import { setDate } from 'date-fns/esm';
 
 const steps: string[] = [
   'Select your services',
